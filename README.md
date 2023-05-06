@@ -19,7 +19,7 @@ AFD is Advance Free Debugger which is used for understanding how Code is being s
 # Learn 
 I would like to express my sincere gratitude to Dr. Muhammad Nouman from Fast Peshawar, who inspired me to create this repository. If you're interested in learning more about Assembly Language and how these codes work, I highly recommend checking out his channel at **https://shorturl.at/iHZ01**. It's a great resource for anyone looking to expand their knowledge and skills in this area.
 
-# Best Article to Study for Graphical Games using Assemblt
+## Best Article to Study for Graphical Games using Assembly Language
 #### **http://www.phatcode.net/res/226/files/pcasm-book.pdf**
 
 # Contributions
