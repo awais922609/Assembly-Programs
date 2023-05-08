@@ -8,6 +8,8 @@ include all.inc ;contains a list of constants, macros, and other declarations us
     
 	;........MENUE PORTION................
 
+timer_1 dw 0     ; variable to store timer value
+secondsPassed db 0  ; variable to store result of Check60Seconds macro
 textrow db 0 
 textcol db 0
 
@@ -32,6 +34,7 @@ textcol db 0
 	
 	str11 db "              PRESS SPACE TO CONTINUE             $"
 	
+	string_input db " 1 for new game , 2 for options , 3 for high score , 4 for information and ESC to Exit"
 	
 	
 	options db 0		; to get user input on what he wants to do
@@ -48,7 +51,9 @@ textcol db 0
 
 
 	str_congrats db  "|               CONGRATULATIONS                  |$"
-	
+	str_level2 db  "|               Welcome to Level 2                  |$"
+
+
     str27 db "|              LEVEL 1 COMPLETE                  |$"
     
 	str28 db "|             PRESS ESCAPE TO EXIT               |$"
@@ -57,8 +62,6 @@ textcol db 0
     
     str_score db "Score $"
 	str_per db "percent $"
-
-	bin2 db  "kingsv.wav",0			; we will have to change this later -> to save/read data from 
 
 
     temp dw ?
@@ -426,7 +429,7 @@ high_score:
 
                                                                             ; level 2
 																			
-;............level2.....................
+;............level1.....................
 
 ;.................................
 
@@ -438,22 +441,25 @@ start2:
 	mov player_death,0
 	mov highscore,100
 
-    setVideoMode
+    VideoMode
 	
 
-    gameBoundary
+    gameBoundary ; declaaring 4 side game boundary
 	
-	printGraphicString level2, 15, 35, 2,2 ; 15 , 35 is thee mid  24 rows 80 columns
+	; //****************** Printing Level1 here on mid of screen ***********************************
+	StringPrinting level1, 15, 35, 2,2 ; 15 , 35 is thee mid  24 rows 80 columnnns
+
 	
     call delay
 
     clear
 
-    setVideoMode
+    VideoMode ; calling again for moving to clear screen and drawing game boundary
 
     gameBoundary
 
-	printGraphicString Username, 0, 35, 1, 8
+	; //*************** Printing Username on screen *****************************
+	StringPrinting Username, 0, 30, 1, 0Eh
    
 
 	; // starting position of ships 
@@ -476,6 +482,8 @@ start2:
 	main_player_box ball_1x,ball_1y, 0Eh
 	main_player_box ball_2x,ball_2y, 0Eh
 		
+	; //********************* Player Lives being shown here *********************************************//
+
 	.if(player_life>0)
 
         add life_x,40
@@ -500,13 +508,21 @@ start2:
     
     .endif
 
-	
+	; //********************* Player Lives being shown here ends here *********************************************//
 
 	
+
+; Check60Seconds timer_1
+; mov [secondsPassed], ax
+
+
 	mov ax,0
     .while ah != 1      ;; until escape is entered
 	
 		resume2:
+
+		
+		; .if(percent >= 90 && secondsPassed>=60)
 		
 		.if(percent >= 90)
 			clear
@@ -532,9 +548,9 @@ start2:
 			
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; hightscore
 		
-		printGraphicString str_score, 0, 50, 1, 4
+		StringPrinting str_score, 0, 50, 1, 4
 	
-		printGraphicString buffer_for_digits, 0, 56, 1, 4
+		StringPrinting buffer_for_digits, 0, 56, 1, 4
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 		
@@ -544,17 +560,6 @@ start2:
 		    
 			mov si, offset buffer_for_digits1
 			
-			
-			;mov ax, highscore   ; move the high score to the EAX register
-			;mov bx, total_pixels_   ; move the total pixels to the EBX register
-
-			;xor dx, dx   ; clear the high 32 bits of EDX register
-			;div bx     ; divide high score by total pixels, quotient will be in AX register
-
-			;mov bx, 100   ; move 100 to BX register
-			;mul bx     ; multiply the quotient by 100, result will be in AX register
-
-			;push ax
 			.if(percent_counter == 13)
 				inc percent
 				mov percent_counter,0
@@ -569,9 +574,9 @@ start2:
 			
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; percentage
 	
-		printGraphicString str_per, 0, 64, 1, 4
+		StringPrinting str_per, 0, 64, 1, 4
 		
-		printGraphicString buffer_for_digits1, 0, 72, 1, 4
+		StringPrinting buffer_for_digits1, 0, 72, 1, 4
 		
 		;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
@@ -628,10 +633,15 @@ start2:
 		.endif
 	
 	
-			; enemies
+		; /************************ enemies Drawing ******************************************************
 		main_player_box ball_1x,ball_1y, 4
 		main_player_box ball_2x,ball_2y, 4
 		
+
+		; /************************ enemies Drawing Ends here ******************************************************
+
+		; //*********************** Logic for enemies not passing through hurdles ****************************
+
 		mov bx,1000
 		
         .while(bx>0)
@@ -640,23 +650,14 @@ start2:
             dec bx
         
         .endw
-		;main_player_box ball_1x,ball_1y, 0
-		ball_movement ball_1x,ball_1y,ball_direction,player_life,player_death,restarting
+		
+		; //*********************** Logic for enemies not passing through hurdles  ends here****************************
+		;enemy1 movement x-axis, y-axis , movement =1 , life , death , restarting
+		ball_movement ball_1x,ball_1y,ball_direction,player_life,player_death,restarting ; stopping
 
-        pop ball_direction
-		;pop restarting
-		
-		;pop prev_x
-		;pop prev_y
-		
-		;.if (restarting == -1)
-			;main_player_box prev_x,prev_y,0
-		;.endif
-		
+        pop ball_direction		
 		
 		mov bx,ball_direction
-		
-		
 
         cmp bx,1
         je dir1_
@@ -674,32 +675,32 @@ start2:
 		dir1_:
 
 			main_player_box ball_1x,ball_1y, 0
-			add ball_1x,4
-			sub ball_1y,4
+			add ball_1x,8
+			sub ball_1y,8
 			main_player_box ball_1x,ball_1y, 4
-			jmp keychecks_
+			jmp keychecks_;stopping
 		
 		dir2_:
 
 			main_player_box ball_1x,ball_1y, 0
-			sub ball_1x,4
-			sub ball_1y,4
+			sub ball_1x,8
+			sub ball_1y,8
 			main_player_box ball_1x,ball_1y, 4
 			jmp keychecks_
 
 		dir3_:
 				
 			main_player_box ball_1x,ball_1y, 0
-			sub ball_1x,4
-			add ball_1y,4
+			sub ball_1x,8
+			add ball_1y,8
 			main_player_box ball_1x,ball_1y, 4
 			jmp keychecks_
 
 		dir4_:
 
 			main_player_box ball_1x,ball_1y, 0
-			add ball_1x,4
-			add ball_1y,4
+			add ball_1x,8
+			add ball_1y,8
 			main_player_box ball_1x,ball_1y, 4
 			jmp keychecks_
 		
@@ -709,15 +710,7 @@ start2:
 		ball_movement ball_2x,ball_2y,ball_direction1,player_life,player_death,restarting1
 
         pop ball_direction1
-		;pop restarting1
-		
-		;pop prev_x
-		;pop prev_y
-		
-		;.if (restarting1 == -1)
-			;main_player_box prev_x,prev_y,0
-		;.endif
-		
+
 		mov bx,ball_direction1
 
         cmp bx,1
@@ -736,32 +729,32 @@ start2:
 		dir11_:
 
 			main_player_box ball_2x,ball_2y, 0
-			add ball_2x,2
-			sub ball_2y,2
+			add ball_2x,6
+			sub ball_2y,6
 			main_player_box ball_2x,ball_2y, 4
 			jmp keychecks1_
 		
 		dir12_:
 
 			main_player_box ball_2x,ball_2y, 0
-			sub ball_2x,2
-			sub ball_2y,2
+			sub ball_2x,6
+			sub ball_2y,6
 			main_player_box ball_2x,ball_2y, 4
 			jmp keychecks1_
 
 		dir13_:
 				
 			main_player_box ball_2x,ball_2y, 0
-			sub ball_2x,2
-			add ball_2y,2
+			sub ball_2x,6
+			add ball_2y,6
 			main_player_box ball_2x,ball_2y, 4
 			jmp keychecks1_
 
 		dir14_:
 
 			main_player_box ball_2x,ball_2y, 0
-			add ball_2x,2
-			add ball_2y,2
+			add ball_2x,6
+			add ball_2y,6
 			main_player_box ball_2x,ball_2y, 4
 			jmp keychecks1_
 
@@ -770,7 +763,7 @@ start2:
 		mov ah,1
 		int 16h
 
-		jz resume2
+		jz resume2 
 
 		
 		
@@ -1106,7 +1099,6 @@ winpage:
         int 16h
 
         .IF ah == 1             ;; escape key
-        
             clear
             jmp exit1
 
@@ -1124,16 +1116,11 @@ winpage:
 
 losepage:
 
-	;setVideoMode
+    StringPrinting finished, 15, 35, 1, 2
 	
-
-    ;gameBoundary
-
-    printGraphicString finished, 15, 35, 1, 2
+	StringPrinting str_score, 17, 34, 1, 2
 	
-	printGraphicString str_score, 17, 34, 1, 2
-	
-	printGraphicString buffer_for_digits, 17, 40, 1, 2
+	StringPrinting buffer_for_digits, 17, 40, 1, 2
 
     call delay
 	call delay
@@ -1288,7 +1275,7 @@ exit:
 		.IF (ah == 1Ch)             ;; enter key
         
             clear
-            jmp new_game2
+            jmp new_game2 ; here
 
         .ENDIF
 		
@@ -1363,6 +1350,8 @@ exit2:
 ret
 PRINT ENDP
 
+
+; /********************************** percentage Proc *******************************************************
 percentage proc 
 
 	mov bx,total_x
@@ -1406,6 +1395,7 @@ percentage proc
 ret
 percentage endp
 
+; /********************************** percentage Proc Ends here *******************************************************
 
 end main
 

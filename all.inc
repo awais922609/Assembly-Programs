@@ -1,3 +1,37 @@
+writing_to_file macro 
+	; Open file for writing
+			mov ah, 3Ch ; function for creating a file
+			mov cx, 0 ; file attributes (0 means normal file)
+			mov dx, offset filename ; offset of filename string
+			int 21h ; call DOS interrupt
+
+			; Save file handle
+			mov file_handle, ax
+
+			; Move high score value to buffer_for_digits
+			mov ax, highscore
+			call print
+
+			; Write username and high score to file
+			mov ah, 40h ; function for writing to a file
+			mov bx, file_handle ; file handle returned from create file
+			mov cx, username_length ; length of username string
+			mov dx, offset Username ; offset of username string
+			int 21h ; call DOS interrupt to write username to file
+			mov cx, buffer_length ; length of buffer_for_digits
+			mov dx, offset buffer_for_digits ; offset of buffer_for_digits
+			int 21h ; call DOS interrupt to write high score to file
+
+			; Close file
+			mov ah, 3Eh ; function for closing a file
+			mov bx, file_handle ; file handle returned from create file
+			int 21h ; call DOS interrupt
+
+
+endm
+
+
+
 box macro x, y, len, wid, color
 
     mov si, x          
@@ -9,7 +43,7 @@ box macro x, y, len, wid, color
 
             .while si < wid
                 
-                printPixel color, si, di
+                OnlyPrinting color, si, di
                 inc si
                 
             .endw
@@ -20,7 +54,7 @@ box macro x, y, len, wid, color
 
 endm
 
-printPixel macro color, xAxis, yAxis
+OnlyPrinting macro color, xAxis, yAxis
 
     mov ah, 0ch
     mov al, color
@@ -35,11 +69,10 @@ printFrom macro color, from_x, from_y, to_x , to_y
     mov si, from_x
     mov di, from_y
 
-    ;; when si is less than to_x and di is less than to_y   ; diagonal top to bottom
     .IF si < to_x && di < to_y 
     
             .while temp != 0
-            printPixel color, si, di
+            OnlyPrinting color, si, di ; displaying color on the specified values
 
                 .IF si < to_x && di < to_y
                     inc si
@@ -54,11 +87,10 @@ printFrom macro color, from_x, from_y, to_x , to_y
     
     .endw
 
-    ;; when si is less than to_x and di is greater than to_y
     .ELSEIF si < to_x && di > to_y
     
             .WHILE temp != 0 
-            printPixel color, si, di
+            OnlyPrinting color, si, di
 
                 .IF si < to_x && di > to_y
                     inc si
@@ -77,7 +109,7 @@ printFrom macro color, from_x, from_y, to_x , to_y
     .ELSEIF si > to_x && di < to_y
     
             .WHILE temp != 0
-            printPixel color, si, di
+            OnlyPrinting color, si, di
 
                 .IF si > to_x && di < to_y
                     dec si
@@ -95,7 +127,7 @@ printFrom macro color, from_x, from_y, to_x , to_y
     .ELSEIF si > to_x && di > to_y
     
             .WHILE temp != 0
-            printPixel color, si, di
+            OnlyPrinting color, si, di
 
                     .IF si > to_x && di > to_y
                         dec si
@@ -110,45 +142,45 @@ printFrom macro color, from_x, from_y, to_x , to_y
             .ENDW
 
     .ELSEIF si == to_x && di == to_y
-        printPixel color, si, di 
+        OnlyPrinting color, si, di 
     
     .ELSEIF si == to_x && di < to_y
         
-        printPixel color, si, di
+        OnlyPrinting color, si, di
         
         inc di
-        .WHILE di < to_y
-            printPixel color, si, di
+        .WHILE di < to_y ; incrementing di until it does not reach to_y
+            OnlyPrinting color, si, di
             inc di
         .ENDW
     
     .ELSEIF si == to_x && di > to_y
         
-        printPixel color, si, di
+        OnlyPrinting color, si, di
         
         dec di
-        .WHILE di > to_y
-            printPixel color, si, di
+        .WHILE di > to_y ; decrementing di until it does not reach to_y
+            OnlyPrinting color, si, di
             dec di
         .ENDW
 
     .ELSEIF si < to_x && di == to_y
             
-            printPixel color, si, di
+            OnlyPrinting color, si, di
             
             inc si
             .WHILE si < to_x
-                printPixel color, si, di
+                OnlyPrinting color, si, di
                 inc si
             .ENDW
 
     .ELSEIF si > to_x && di == to_y
                 
-                printPixel color, si, di
+                OnlyPrinting color, si, di
                 
                 dec si
                 .WHILE si > to_x
-                    printPixel color, si, di
+                    OnlyPrinting color, si, di
                     dec si
                 .ENDW
     
@@ -161,11 +193,11 @@ printFrom macro color, from_x, from_y, to_x , to_y
 
 endm
 
-setVideoMode macro
+VideoMode macro
 
-    mov ah, 0
-    mov al, 12h
-    int 10h
+    mov ah, 0 ; set to video mode
+    mov al, 12h ; 16 color graphics optionn
+    int 10h ; iterrupt video mode
 
 endm
 
@@ -314,8 +346,7 @@ defaultRightValues macro
 endm
 
 
-main_player_box macro xAxis , yAxis , shipColor   
-
+main_player_box macro xAxis , yAxis , shipColor   ; in case of startig x-axis=y-axis=400 and ship color = grey
     mov di, xAxis
 	mov si, yAxis
 	
@@ -361,17 +392,8 @@ main_player_box macro xAxis , yAxis , shipColor
 	mov DownBarY2, si     ;; DownBarY2 = yAxis + 10
 	add DownBarY2, 15
 	
-	
-	
 
-    ; .IF leftBarX1 <= 10  ;; if moves out of left of screem
-    ;     defaultRightValues
-    ; .ELSEIF rightBarX2 >= 620  ;; if moves out of right of screem
-    ;     defaultLeftValues
-    ; .ENDIF
-    
-
-
+ ; here
     printFrom shipColor, leftBarX1, leftBarY1, leftBarX2, leftBarY2     ;; left horizontal Bar
     
 	mov bx,15
@@ -433,7 +455,7 @@ endm
 
 
 
-printGraphicString macro string, row, col, space, color
+StringPrinting macro string, row, col, space, color
 
     push si
     push di
@@ -488,64 +510,64 @@ gameBoundary macro
     mov frame_Y_counter, 30
 
     .REPEAT
-        printPixel 3, 30, frame_Y_counter
-		printPixel 3, 31, frame_Y_counter
-		printPixel 3, 32, frame_Y_counter
-		printPixel 3, 33, frame_Y_counter
-		printPixel 3, 34, frame_Y_counter
-		printPixel 3, 35, frame_Y_counter
-		printPixel 3, 36, frame_Y_counter
-		printPixel 3, 37, frame_Y_counter
-		printPixel 3, 38, frame_Y_counter
-		printPixel 3, 39, frame_Y_counter
-		printPixel 3, 40, frame_Y_counter
+        OnlyPrinting 2, 30, frame_Y_counter
+		OnlyPrinting 2, 31, frame_Y_counter
+		OnlyPrinting 2, 32, frame_Y_counter
+		OnlyPrinting 2, 33, frame_Y_counter
+		OnlyPrinting 2, 34, frame_Y_counter
+		OnlyPrinting 2, 35, frame_Y_counter
+		OnlyPrinting 2, 36, frame_Y_counter
+		OnlyPrinting 2, 37, frame_Y_counter
+		OnlyPrinting 2, 38, frame_Y_counter
+		OnlyPrinting 2, 39, frame_Y_counter
+		OnlyPrinting 2, 40, frame_Y_counter
         inc frame_Y_counter
     .UNTIL frame_Y_counter == 460
 
     mov frame_X_counter, 30
 
     .REPEAT
-        printPixel 3, frame_X_counter, frame_y_counter
-		printPixel 3, frame_X_counter, 451
-		printPixel 3, frame_X_counter, 452
-		printPixel 3, frame_X_counter, 453
-		printPixel 3, frame_X_counter, 454
-		printPixel 3, frame_X_counter, 455
-		printPixel 3, frame_X_counter, 456
-		printPixel 3, frame_X_counter, 457
-		printPixel 3, frame_X_counter, 458
-		printPixel 3, frame_X_counter, 459
-		printPixel 3, frame_X_counter, 460
+        OnlyPrinting 2, frame_X_counter, frame_y_counter
+		OnlyPrinting 2, frame_X_counter, 451
+		OnlyPrinting 2, frame_X_counter, 452
+		OnlyPrinting 2, frame_X_counter, 453
+		OnlyPrinting 2, frame_X_counter, 454
+		OnlyPrinting 2, frame_X_counter, 455
+		OnlyPrinting 2, frame_X_counter, 456
+		OnlyPrinting 2, frame_X_counter, 457
+		OnlyPrinting 2, frame_X_counter, 458
+		OnlyPrinting 2, frame_X_counter, 459
+		OnlyPrinting 2, frame_X_counter, 460
         inc frame_X_counter
     .UNTIL frame_X_counter == 615
 
     .REPEAT
-        printPixel 3, frame_X_counter, frame_y_counter
-		printPixel 3, 611, frame_y_counter
-		printPixel 3, 612, frame_y_counter
-		printPixel 3, 613, frame_y_counter
-		printPixel 3, 614, frame_y_counter
-		printPixel 3, 615, frame_y_counter
-		printPixel 3, 616, frame_y_counter
-		printPixel 3, 617, frame_y_counter
-		printPixel 3, 618, frame_y_counter
-		printPixel 3, 619, frame_y_counter
-		printPixel 3, 620, frame_y_counter
+        OnlyPrinting 2, frame_X_counter, frame_y_counter
+		OnlyPrinting 2, 611, frame_y_counter
+		OnlyPrinting 2, 612, frame_y_counter
+		OnlyPrinting 2, 613, frame_y_counter
+		OnlyPrinting 2, 614, frame_y_counter
+		OnlyPrinting 2, 615, frame_y_counter
+		OnlyPrinting 2, 616, frame_y_counter
+		OnlyPrinting 2, 617, frame_y_counter
+		OnlyPrinting 2, 618, frame_y_counter
+		OnlyPrinting 2, 619, frame_y_counter
+		OnlyPrinting 2, 620, frame_y_counter
         dec frame_y_counter
     .UNTIL frame_y_counter == 30
 
     .REPEAT
-        printPixel 3, frame_X_counter, frame_y_counter
-		printPixel 3, frame_X_counter,  31
-		printPixel 3, frame_X_counter,  32
-		printPixel 3, frame_X_counter,  33
-		printPixel 3, frame_X_counter,  34
-		printPixel 3, frame_X_counter,  35
-		printPixel 3, frame_X_counter,  36
-		printPixel 3, frame_X_counter,  37
-		printPixel 3, frame_X_counter,  38
-		printPixel 3, frame_X_counter,  39
-		printPixel 3, frame_X_counter,  40
+        OnlyPrinting 2, frame_X_counter, frame_y_counter
+		OnlyPrinting 2, frame_X_counter,  31
+		OnlyPrinting 2, frame_X_counter,  32
+		OnlyPrinting 2, frame_X_counter,  33
+		OnlyPrinting 2, frame_X_counter,  34
+		OnlyPrinting 2, frame_X_counter,  35
+		OnlyPrinting 2, frame_X_counter,  36
+		OnlyPrinting 2, frame_X_counter,  37
+		OnlyPrinting 2, frame_X_counter,  38
+		OnlyPrinting 2, frame_X_counter,  39
+		OnlyPrinting 2, frame_X_counter,  40
         dec frame_X_counter
     .UNTIL frame_X_counter == 30
 
@@ -683,8 +705,8 @@ pop p1
 
 endm
 
-ball_movement macro x_point, y_point, ball_dir, player_life, player_death, restarting
-    .if(ball_dir==1)
+ball_movement macro x_point, y_point, ball_dir, player_life, player_death, restarting ;1 (up), 2 (left), 3 (down), or 4 (right).
+    .if(ball_dir==1) ;up
 	
         ; read color at current position
         mov ah, 0Dh
@@ -693,9 +715,9 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 		sub dx, 2
         int 10H ; AL = COLOR
 
-        ; check if player
-        .if (al==8)
-			sub highscore,500
+        .if (al==8) ; if touches ball
+			; sub highscore,500
+            mov highscore , 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -716,7 +738,8 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 
         ; check if player
         .if (al==8)
-			sub highscore,500
+			; sub highscore,500
+            mov highscore, 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -736,7 +759,7 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
             mov ball_dir,4
         .endif
 
-    .elseif(ball_dir==2)
+    .elseif(ball_dir==2) ; left
         ; read color at current position
         mov ah, 0Dh
         mov cx, x_point               ; hit left wall
@@ -746,8 +769,9 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 
 		; check if player
         .if (al==8)
-			sub highscore,500
-			dec player_life
+			; sub highscore,500
+			mov highscore ,  100
+            dec player_life
 			inc player_death
 			defaultballValues
 		.ENDIF
@@ -767,7 +791,8 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 
 		; check if player
         .if (al==8)
-			sub highscore,500
+			; sub highscore,500
+            mov highscore , 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -798,7 +823,8 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 		
 		; check if player
         .if (al==8)
-			sub highscore,500
+			; sub highscore,500'
+            mov highscore , 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -818,7 +844,8 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 		
 		; check if player
         .if (al==8)
-			sub highscore,500
+			; sub highscore,500
+            mov highscore , 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -835,10 +862,6 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 
         .if(y_point>=440)
             mov ball_dir,2
-            ;dec player_life
-            ;inc player_death
-            ;mov restarting,0
-            ;jmp l1
         .endif
 
     .elseif(ball_dir==4)
@@ -851,7 +874,8 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 
         ; check if player
         .if (al==8)
-			sub highscore,500
+			; sub highscore,500
+            mov highscore , 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -871,7 +895,8 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 		
 		; check if player
         .if (al==8)
-			sub highscore,500
+			; sub highscore,500
+            mov highscore , 100
 			dec player_life
 			inc player_death
 			defaultballValues
@@ -888,10 +913,6 @@ ball_movement macro x_point, y_point, ball_dir, player_life, player_death, resta
 
         .if(y_point>=440)
             mov ball_dir,1
-            ;dec player_life
-            ;inc player_death
-            ;mov restarting,0
-            ;jmp l1
         .endif
 
     .endif
@@ -904,10 +925,13 @@ defaultballValues macro
 
 	mov ball_1x, 200
 	mov ball_1y, 200
-	mov ball_2x, 100
-	mov ball_2y, 100
+	mov ball_2x, 150
+	mov ball_2y, 150
+    mov ball_3x, 100
+    mov ball_3y, 100
 	mov ball_direction, 1
 	mov ball_direction1, 4
+    mov ball_direction2, 2
 	
 endm
 
@@ -965,3 +989,30 @@ draw_bricks macro life, x1, y1, x2, y2 ; Life/Status of the Brick, x1 y1 top lef
 .endif
             
 endm
+
+
+; Macro to check if 60 seconds have passed
+; Parameters:
+;   timerVar - the timer variable to store the current time
+; Returns:
+;   true (1) if less than 60 seconds have passed
+;   false (0) if 60 seconds or more have passed
+; Check60Seconds macro timerVar
+;     mov ah, 00h     ; set function to get system time
+;     int 1Ah         ; call interrupt
+;     mov [timerVar], dx ; store current time in timer variable
+    
+;     mov ah, 00h     ; set function to get system time again
+;     int 1Ah         ; call interrupt
+;     sub dx, [timerVar] ; subtract previous time from current time
+    
+;     mov cx, 60*18.2  ; calculate 60 seconds in clock ticks (18.2 ticks per second)
+;     cmp dx, cx      ; compare with 60 seconds (60 * 18.2 = 3Ch hex)
+;     jge sixtySecondsPassed
+;     mov ax, 1       ; less than 60 seconds have passed, return true
+;     ret
+    
+; sixtySecondsPassed:
+;     mov ax, 0       ; 60 seconds or more have passed, return false
+;     ret
+; endm
