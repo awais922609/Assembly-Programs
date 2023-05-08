@@ -1,4 +1,4 @@
-include all.inc ;contains a list of constants, macros, and other declarations used in the program.
+include 1.inc ;contains a list of constants, macros, and other declarations used in the program.
 																						;  ERROR WITH LINE 506
 .model large ; 1 MB of memory. 
 ;.MODEL FLAT, STDCALL 
